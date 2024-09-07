@@ -1,0 +1,10 @@
+Adafruit library
+- BME280
+- BNO055 + Unified Sensor
+- BusIO
+
+TinyGPSPlus
+
+arduino-esp32 master - FS, SD, SPI
+arduino-libs-master - DS1307
+I2c Dev
