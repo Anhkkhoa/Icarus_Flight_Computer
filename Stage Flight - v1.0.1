@@ -1,0 +1,114 @@
+/* ICARUS v1.0.1, Arduino, I2C
+This code for test stage flight and pre-plan code structure
+*/
+
+// library
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
+// BME280 declaration, using SPI
+#define BME_SCK 13
+#define BME_MISO 12
+#define BME_MOSI 11
+#define BME_CS 10
+Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK); //software SPI, if use Hardware use // Adafruit_BME280 bme(BME_CS) 
+
+// Fire Button
+const int Fire1pin = 2; 
+const int Fire2pin = 3;
+int Fire1 = 0; // binary stage Button 1
+int Fire2 = 0; // binary stage Button 2
+
+// temporary switch condition for apogee
+const int ApogeePin = 8;
+int Apogee = 0; // binary stage apogee stage
+
+//default variable of environment
+#define SeaLevelPressure (1013.25) //milipascal
+
+void setup() {
+  /*
+  Set up declaration
+  LED Stages: Pre-Launch (chasing effect when calibrate, ready is Green), Operational(Red), Recovery (Orange)
+  pinMode(7, OUTPUT);
+  */
+
+  Serial.begin(115200); // baud rate
+  Serial.println("Icarus 1.0.2");
+
+  pinMode(4, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(2, OUTPUT);
+
+  pinMode(Fire1pin, INPUT);
+  pinMode(Fire2pin, INPUT);
+  pinMode(Apogee, INPUT);
+
+  //replace this part with condition that stop running it after finish calibrate and switch to green
+  digitalWrite(7, HIGH);  
+  delay(100);                      
+  digitalWrite(7, LOW);   
+  delay(100);                      
+  digitalWrite(8, HIGH);  
+  delay(100);                     
+  digitalWrite(8, LOW);   
+  delay(100);                    
+  digitalWrite(9, HIGH);  
+  delay(100);                      
+  digitalWrite(9, LOW);  
+  delay(100); 
+  digitalWrite(7,HIGH); 
+
+  //BME280 detecting Code
+  bool status = bme.begin();
+  if (status) {
+    Serial.println("BME280 Detected");
+  } else {
+    Serial.println("Unable to Detect BME280");
+    while (1); //stop the program when the sensor not detected
+  }               
+}
+
+void loop() {
+  Fire1 = digitalRead(Fire1pin);
+  Fire2 = digitalRead(Fire2pin);
+  Apogee = digitalRead(ApogeePin);
+
+ 
+  if (Fire1 == HIGH & Fire2 == HIGH) { //FIRE!!!, switch to launch button system next
+    digitalWrite(7,LOW);
+    digitalWrite(8, HIGH);
+  }
+
+  if (Apogee == HIGH) { //switch to condition when reach Apogee
+    digitalWrite(8,LOW);
+    digitalWrite(9,HIGH);
+  }
+
+  // call BME280
+  BME280print();
+  delay(1000);
+}
+
+void BME280print() {
+  Serial.print("Pressure = ");
+  Serial.print(bme.readPressure() / 100.0F);
+  Serial.println(" hPa");
+
+  Serial.print("Temp: ");
+  Serial.print(bme.readTemperature());
+  Serial.println(" *C");
+
+  Serial.print("Humidity = "); // use this in the future for testing wet reliability
+  Serial.print(bme.readHumidity());
+  Serial.println(" %");
+
+  Serial.print("Approx. Altitude = ");
+  Serial.print(bme.readAltitude(SeaLevelPressure));
+  Serial.println(" m");
+
+  Serial.println();
+
+}
